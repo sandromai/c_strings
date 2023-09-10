@@ -5,10 +5,12 @@
 #define true 1
 #define false 0
 
+#define TRIM_CHARS " \n\r\t\v"
 #define TRIM_LEFT -1
 #define TRIM_BOTH 0
 #define TRIM_RIGHT 1
 
+#define PAD_STR " "
 #define PAD_LEFT -1
 #define PAD_BOTH 0
 #define PAD_RIGHT 1
@@ -30,6 +32,37 @@ bool str_compare(const char *str1, const char *str2) {
     if (*(str1 + i) != *(str2 + i)) {
       result = false;
       break;
+    }
+  }
+
+  return result;
+}
+
+bool str_contains(const char *str, const char *search) {
+  if (*search == '\0') {
+    return true;
+  }
+
+  bool result = false;
+  unsigned int found_index = 0;
+
+  for (unsigned int i = 0; *(str + i) != '\0' || *(search + (i - found_index)) != '\0'; ++i) {
+    if (*(str + i) == '\0') {
+      result = false;
+      break;
+    }
+
+    if (result) {
+      if (*(search + (i - found_index)) == '\0') {
+        break;
+      }
+
+      if (*(str + i) != *(search + (i - found_index))) {
+        result = false;
+      }
+    } else if (*(str + i) == *search) {
+      result = true;
+      found_index = i;
     }
   }
 
@@ -75,7 +108,11 @@ bool str_ends_with(const char *str, const char *end) {
 }
 
 char *str_concat(const char *str1, const char *str2) {
-  char *result = malloc((str_length(str1) + str_length(str2)) * sizeof(char));
+  char *result = malloc((str_length(str1) + str_length(str2) + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
 
   for (unsigned int i = 0; 1 == 1; ++i) {
     if (*str1 != '\0') {
@@ -93,13 +130,117 @@ char *str_concat(const char *str1, const char *str2) {
   return result;
 }
 
-char *str_to_upper(const char *str) {}
+char *str_copy(const char *str) {
+  char *result = malloc((str_length(str) + 1) * sizeof *result);
 
-char *str_to_lower(const char *str) {}
+  if (result == NULL) {
+    return NULL;
+  }
+
+  unsigned int i = 0;
+
+  for (; *(str + i) != '\0'; ++i) {
+    *(result + i) = *(str + i);
+  }
+
+  *(result + i) = '\0';
+
+  return result;
+}
+
+char *str_to_upper(const char *str) {
+  char *result = malloc((str_length(str) + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  for (unsigned int i = 0; *(str + i) != '\0'; ++i) {
+    if (*(str + i) >= 97 && *(str + i) <= 122) {
+      *(result + i) = *(str + i) - 32;
+    } else {
+      *(result + i) = *(str + i);
+    }
+  }
+
+  return result;
+}
+
+char *str_to_lower(const char *str) {
+  char *result = malloc((str_length(str) + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  for (unsigned int i = 0; *(str + i) != '\0'; ++i) {
+    if (*(str + i) >= 65 && *(str + i) <= 90) {
+      *(result + i) = *(str + i) + 32;
+    } else {
+      *(result + i) = *(str + i);
+    }
+  }
+
+  return result;
+}
+
+char *str_capitalize(
+  const char *str,
+  const char *separators,
+  const unsigned int count
+) {
+  char *result = malloc((str_length(str) + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  char *current_str = malloc(2 * sizeof *current_str);
+
+  if (current_str == NULL) {
+    free(result);
+    result = NULL;
+    return NULL;
+  }
+
+  bool capitalize = true;
+  unsigned int capitalizations_count = 0;
+
+  for (unsigned int i = 0; *(str + i) != '\0'; ++i) {
+    if (capitalize) {
+      if (*(str + i) >= 97 && *(str + i) <= 122) {
+        *(result + i) = *(str + i) - 32;
+      } else {
+        *(result + i) = *(str + i);
+      }
+
+      capitalize = false;
+      ++capitalizations_count;
+    } else {
+      *current_str = *(str + i);
+      *(current_str + 1) = '\0';
+
+      if ((count == 0 || capitalizations_count < count) && str_contains(separators, current_str)) {
+        capitalize = true;
+      }
+
+      *(result + i) = *(str + i);
+    }
+  }
+
+  free(current_str);
+  current_str = NULL;
+
+  return result;
+}
 
 char *str_reverse(const char *str) {
   unsigned int length = str_length(str);
-  char *result = (char *)malloc((length * sizeof(char)) + 1);
+  char *result = malloc((length + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
 
   unsigned int i = 0;
 
@@ -113,7 +254,187 @@ char *str_reverse(const char *str) {
   return result;
 }
 
-char *str_trim(const char *str, int side) {}
+char *str_part(
+  const char *str,
+  const unsigned int start,
+  const unsigned int length
+) {
+  int size;
+
+  if (length) {
+    size = length + 1;
+  } else {
+    size = str_length(str) + 1 - start;
+  }
+
+  if (size <= 0) {
+    return "";
+  }
+
+  char *result = malloc(size * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  unsigned int i = 0;
+
+  for (; (length == 0 || i < length) && *(str + start + i) != '\0'; ++i) {
+    *(result + i) = *(str + start + i);
+  }
+
+  *(result + i) = '\0';
+
+  return result;
+}
+
+char *str_trim(
+  const char *str,
+  const char *chars,
+  int side
+) {
+  unsigned int length = str_length(str);
+  char *result = malloc((length + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  char *current_str = malloc(2 * sizeof *current_str);
+
+  if (current_str == NULL) {
+    free(result);
+    result = NULL;
+    return NULL;
+  }
+
+  bool trim = true;
+  unsigned int j = 0;
+
+  if (side == TRIM_LEFT) {
+    for (unsigned int i = 0; *(str + i) != '\0'; ++i) {
+      if (trim) {
+        *current_str = *(str + i);
+        *(current_str + 1) = '\0';
+
+        if (!str_contains(chars, current_str)) {
+          trim = false;
+          *(result + j) = *(str + i);
+          ++j;
+        }
+      } else {
+        *(result + j) = *(str + i);
+        ++j;
+      }
+    }
+
+    *(result + j) = '\0';
+  } else if (side == TRIM_RIGHT) {
+    char *reversed_str = str_reverse(str);
+
+    if (reversed_str == NULL) {
+      free(result);
+      result = NULL;
+      free(current_str);
+      current_str = NULL;
+      return NULL;
+    }
+
+    for (unsigned int i = 0; *(reversed_str + i) != '\0'; ++i) {
+      if (trim) {
+        *current_str = *(reversed_str + i);
+        *(current_str + 1) = '\0';
+
+        if (!str_contains(chars, current_str)) {
+          trim = false;
+          *(result + j) = *(reversed_str + i);
+          ++j;
+        }
+      } else {
+        *(result + j) = *(reversed_str + i);
+        ++j;
+      }
+    }
+
+    free(reversed_str);
+    reversed_str = NULL;
+
+    *(result + j) = '\0';
+
+    result = str_reverse(result);
+
+    if (result == NULL) {
+      free(current_str);
+      current_str = NULL;
+      return NULL;
+    }
+  } else {
+    for (unsigned int i = 0; *(str + i) != '\0'; ++i) {
+      if (trim) {
+        *current_str = *(str + i);
+        *(current_str + 1) = '\0';
+
+        if (!str_contains(chars, current_str)) {
+          trim = false;
+          *(result + j) = *(str + i);
+          ++j;
+        }
+      } else {
+        *(result + j) = *(str + i);
+        ++j;
+      }
+    }
+
+    *(result + j) = '\0';
+
+    char *reversed_str = str_reverse(result);
+
+    if (reversed_str == NULL) {
+      free(result);
+      result = NULL;
+      free(current_str);
+      current_str = NULL;
+      return NULL;
+    }
+
+    trim = true;
+    j = 0;
+
+    for (unsigned int i = 0; *(reversed_str + i) != '\0'; ++i) {
+      if (trim) {
+        *current_str = *(reversed_str + i);
+        *(current_str + 1) = '\0';
+
+        if (!str_contains(chars, current_str)) {
+          trim = false;
+          *(result + j) = *(reversed_str + i);
+          ++j;
+        }
+      } else {
+        *(result + j) = *(reversed_str + i);
+        ++j;
+      }
+    }
+
+    free(reversed_str);
+    reversed_str = NULL;
+
+    *(result + j) = '\0';
+
+    result = str_reverse(result);
+
+    if (result == NULL) {
+      free(current_str);
+      current_str = NULL;
+      return NULL;
+    }
+  }
+
+  free(current_str);
+  current_str = NULL;
+
+  return result;
+}
 
 char *str_pad(
   const char *str,
@@ -129,7 +450,7 @@ char *str_replace(
   unsigned int count
 ) {}
 
-char **str_split(char *str, const char *separator) {}
+char **str_split(const char *str, const char *separator) {}
 
 char **str_split_n(
   const char *str,
@@ -137,7 +458,7 @@ char **str_split_n(
   unsigned int n
 ) {}
 
-char *str_join(const char **str, const char *separator) {}
+char *str_join(const char **array, const char *separator) {}
 
 int str_to_int(const char *str) {
   bool negative = false;
@@ -150,53 +471,12 @@ int str_to_int(const char *str) {
   }
 
   int result = 0;
-  bool unexpected = false;
 
-  while (*str != '\0' && !unexpected) {
-    switch (*str) {
-      case '0':
-        result *= 10;
-        break;
-
-      case '1':
-        result = (result * 10) + 1;
-        break;
-
-      case '2':
-        result = (result * 10) + 2;
-        break;
-
-      case '3':
-        result = (result * 10) + 3;
-        break;
-
-      case '4':
-        result = (result * 10) + 4;
-        break;
-
-      case '5':
-        result = (result * 10) + 5;
-        break;
-
-      case '6':
-        result = (result * 10) + 6;
-        break;
-
-      case '7':
-        result = (result * 10) + 7;
-        break;
-
-      case '8':
-        result = (result * 10) + 8;
-        break;
-
-      case '9':
-        result = (result * 10) + 9;
-        break;
-
-      default:
-        unexpected = true;
-        break;
+  while (*str != '\0') {
+    if (*str >= 48 && *str <= 57) {
+      result = (result * 10) + (*str - 48);
+    } else {
+      break;
     }
 
     *str++;
@@ -221,118 +501,21 @@ float str_to_float(const char *str) {
 
   unsigned int whole_part = 0;
   float decimal_part = 0;
-  unsigned int decimal_point = 0;
+  bool decimal_point = false;
   unsigned int decimal_count = 0;
-  bool unexpected = false;
 
-  while (*str != '\0' && !unexpected) {
-    if (decimal_point == 1) {
-      ++decimal_count;
-    }
-
-    switch (*str) {
-      case '.':
-        decimal_point = 1;
-        break;
-
-      case '0':
-        if (decimal_point == 0) {
-          whole_part *= 10;
-        } else {
-          decimal_part *= 10;
-        }
-
-        break;
-
-      case '1':
-        if (decimal_point == 0) {
-          whole_part = (whole_part * 10) + 1;
-        } else {
-          decimal_part = (decimal_part * 10) + 1;
-        }
-
-        break;
-
-      case '2':
-        if (decimal_point == 0) {
-          whole_part = (whole_part * 10) + 2;
-        } else {
-          decimal_part = (decimal_part * 10) + 2;
-        }
-
-        break;
-
-      case '3':
-        if (decimal_point == 0) {
-          whole_part = (whole_part * 10) + 3;
-        } else {
-          decimal_part = (decimal_part * 10) + 3;
-        }
-
-        break;
-
-      case '4':
-        if (decimal_point == 0) {
-          whole_part = (whole_part * 10) + 4;
-        } else {
-          decimal_part = (decimal_part * 10) + 4;
-        }
-
-        break;
-
-      case '5':
-        if (decimal_point == 0) {
-          whole_part = (whole_part * 10) + 5;
-        } else {
-          decimal_part = (decimal_part * 10) + 5;
-        }
-
-        break;
-
-      case '6':
-        if (decimal_point == 0) {
-          whole_part = (whole_part * 10) + 6;
-        } else {
-          decimal_part = (decimal_part * 10) + 6;
-        }
-
-        break;
-
-      case '7':
-        if (decimal_point == 0) {
-          whole_part = (whole_part * 10) + 7;
-        } else {
-          decimal_part = (decimal_part * 10) + 7;
-        }
-
-        break;
-
-      case '8':
-        if (decimal_point == 0) {
-          whole_part = (whole_part * 10) + 8;
-        } else {
-          decimal_part = (decimal_part * 10) + 8;
-        }
-
-        break;
-
-      case '9':
-        if (decimal_point == 0) {
-          whole_part = (whole_part * 10) + 9;
-        } else {
-          decimal_part = (decimal_part * 10) + 9;
-        }
-
-        break;
-
-      default:
-        unexpected = true;
-
-        if (decimal_count > 0) {
-          --decimal_count;
-        }
-
-        break;
+  while (*str != '\0') {
+    if (*str == '.') {
+      decimal_point = true;
+    } else if (*str >= 48 && *str <= 57) {
+      if (decimal_point) {
+        decimal_part = (decimal_part * 10) + (*str - 48);
+        ++decimal_count;
+      } else {
+        whole_part = (whole_part * 10) + (*str - 48);
+      }
+    } else {
+      break;
     }
 
     *str++;
@@ -352,11 +535,11 @@ float str_to_float(const char *str) {
 }
 
 int main(void) {
-  char *my_str = "Hello world!";
-  char *my_str_2 = "Hello world!";
+  const char *my_str = "Hello world!";
+  const char *copy = str_copy(my_str);
 
   printf("%s\n", my_str);
-  printf("%s\n", str_reverse(my_str));
+  printf("%s\n", copy);
 
   return 0;
 }
