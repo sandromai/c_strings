@@ -441,7 +441,112 @@ char *str_pad(
   unsigned int length,
   const char *pad_str,
   int side
-) {}
+) {
+  if (*pad_str == '\0') {
+    return str_copy(str);
+  }
+
+  int length_diff = length - str_length(str);
+
+  if (length_diff <= 0) {
+    return str_copy(str);
+  }
+
+  char *result = malloc((length + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  unsigned int j = 0;
+  unsigned int k = 0;
+
+  if (side == PAD_LEFT) {
+    bool original = false;
+
+    for (unsigned int i = 0; i < length; ++i, ++j) {
+      if (!original) {
+        if (i >= length_diff) {
+          original = true;
+        } else {
+          if (*(pad_str + k) == '\0') {
+            k = 0;
+          }
+
+          *(result + j) = *(pad_str + k);
+          ++k;
+          continue;
+        }
+      }
+
+      *(result + j) = *(str + i - length_diff);
+    }
+  } else if (side == PAD_BOTH) {
+    unsigned int left_pad = length_diff / 2;
+    unsigned int right_pad = length_diff - left_pad;
+
+    bool left = true;
+    bool right = false;
+
+    for (unsigned int i = 0; i < length; ++i, ++j) {
+      if (left) {
+        if (i >= left_pad) {
+          left = false;
+          k = 0;
+        } else {
+          if (*(pad_str + k) == '\0') {
+            k = 0;
+          }
+
+          *(result + j) = *(pad_str + k);
+          ++k;
+          continue;
+        }
+      }
+
+      if (!right) {
+        if (*(str + i - left_pad) == '\0') {
+          right = true;
+        } else {
+          *(result + j) = *(str + i - left_pad);
+          continue;
+        }
+      }
+
+        
+      if (*(pad_str + k) == '\0') {
+        k = 0;
+      }
+
+      *(result + j) = *(pad_str + k);
+      ++k;
+    }
+  } else {
+    bool original = true;
+
+    for (unsigned int i = 0; i < length; ++i, ++j) {
+      if (original) {
+        if (*(str + i) == '\0') {
+          original = false;
+        } else {
+          *(result + j) = *(str + i);
+          continue;
+        }
+      }
+
+      if (*(pad_str + k) == '\0') {
+        k = 0;
+      }
+
+      *(result + j) = *(pad_str + k);
+      ++k;
+    }
+  }
+
+  *(result + j) = '\0';
+
+  return result;
+}
 
 char *str_replace(
   const char *search,
@@ -536,10 +641,17 @@ float str_to_float(const char *str) {
 
 int main(void) {
   const char *my_str = "Hello world!";
-  const char *copy = str_copy(my_str);
 
   printf("%s\n", my_str);
-  printf("%s\n", copy);
+  printf("%s\n", str_pad(my_str, 15, "0", PAD_LEFT));
+  printf("%s\n", str_pad(my_str, 15, "0", PAD_RIGHT));
+  printf("%s\n", str_pad(my_str, 15, "", PAD_RIGHT));
+  printf("%s\n", str_pad(my_str, 1, "0", PAD_RIGHT));
+  printf("%s\n", str_pad(my_str, 15, "01", PAD_LEFT));
+  printf("%s\n", str_pad(my_str, 16, "0", PAD_BOTH));
+  printf("%s\n", str_pad(my_str, 15, "0", PAD_BOTH));
+  printf("%s\n", str_pad(my_str, 15, "01", PAD_BOTH));
+  printf("%s\n", str_pad(my_str, 16, "01", PAD_BOTH));
 
   return 0;
 }
