@@ -582,7 +582,7 @@ char *str_replace(
 
         for (; *(replace + k) != '\0'; ++k) {
           if (result == NULL) {
-            result = malloc((j + 1) * sizeof *result);
+            result = malloc(sizeof *result);
           } else {
             result = realloc(result, (j + 1) * sizeof *result);
           }
@@ -599,7 +599,7 @@ char *str_replace(
     }
 
     if (result == NULL) {
-      result = malloc((j + 1) * sizeof *result);
+      result = malloc(sizeof *result);
     } else {
       result = realloc(result, (j + 1) * sizeof *result);
     }
@@ -617,7 +617,61 @@ char *str_replace(
   return result;
 }
 
-char **str_split(const char *str, const char *separator) {}
+char **str_split(const char *str, const char *separator) {
+  char **result = malloc(sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  *result = malloc(sizeof **result);
+
+  if (*result == NULL) {
+    return NULL;
+  }
+
+  **result = '\0';
+
+  unsigned int count = 0;
+
+  for (unsigned int i = 0, char_count = 0; *(str + i) != '\0'; ++i) {
+    if (*(str + i) == *separator) {
+      *(*(result + count) + char_count) = '\0';
+      char_count = 0;
+      result = realloc(result, (++count + 1) * sizeof *result);
+
+      if (result == NULL) {
+        return NULL;
+      }
+
+      *(result + count) = malloc(sizeof **result);
+
+      if (*(result + count) == NULL) {
+        return NULL;
+      }
+
+      **(result + count) = '\0';
+    } else {
+      *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
+
+      if (*(result + count) == NULL) {
+        return NULL;
+      }
+
+      *(*(result + count) + char_count++) = *(str + i);
+    }
+  }
+
+  result = realloc(result, (++count + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  *(result + count) = NULL;
+
+  return result;
+}
 
 char **str_split_n(
   const char *str,
@@ -702,14 +756,17 @@ float str_to_float(const char *str) {
 }
 
 int main(void) {
-  const char *str = "Hello world!";
+  const char *str = "Hello world! Another line.";
+  char **result = str_split(str, " ");
 
   printf("%s\n", str);
-  printf("%s\n", str_replace(str, "!", ".", 0));
-  printf("%s\n", str_replace(str, "!", "", 0));
-  printf("%s\n", str_replace(str, "", ".", 0));
-  printf("%s\n", str_replace(str, "l", "L", 0));
-  printf("%s\n", str_replace(str, "l", "L", 2));
+
+  for (unsigned int i = 0; *(result + i) != NULL; ++i) {
+    printf("%s\n", *(result + i));
+    free(*(result + i));
+  }
+
+  free(result);
 
   return 0;
 }
