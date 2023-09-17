@@ -549,11 +549,73 @@ char *str_pad(
 }
 
 char *str_replace(
+  const char *str,
   const char *search,
   const char *replace,
-  const char *subject,
   unsigned int count
-) {}
+) {
+  if (*search == '\0') {
+    return str_copy(str);
+  }
+
+  char *result = NULL;
+  unsigned int replaces = 0;
+  unsigned int j = 0;
+  unsigned int copy_index = 0;
+
+  for (unsigned int i = 0; *(str + i) != '\0'; ++i) {
+    if ((*(str + i) == *search) && ((count == 0) || (replaces < count))) {
+      bool found = true;
+      unsigned int k = 1;
+
+      for (; *(search + k) != '\0'; ++k) {
+        if (*(str + i + k) != *(search + k)) {
+          found = false;
+          break;
+        }
+      }
+
+      if (found) {
+        i += k - 1;
+        ++replaces;
+        k = 0;
+
+        for (; *(replace + k) != '\0'; ++k) {
+          if (result == NULL) {
+            result = malloc((j + 1) * sizeof *result);
+          } else {
+            result = realloc(result, (j + 1) * sizeof *result);
+          }
+
+          if (result == NULL) {
+            return NULL;
+          }
+
+          *(result + j++) = *(replace + k);
+        }
+
+        continue;
+      }
+    }
+
+    if (result == NULL) {
+      result = malloc((j + 1) * sizeof *result);
+    } else {
+      result = realloc(result, (j + 1) * sizeof *result);
+    }
+
+    if (result == NULL) {
+      return NULL;
+    }
+
+    *(result + j++) = *(str + i);
+  }
+
+  result = realloc(result, (j + 1) * sizeof *result);
+  *(result + j) = '\0';
+
+  return result;
+}
 
 char **str_split(const char *str, const char *separator) {}
 
@@ -640,18 +702,14 @@ float str_to_float(const char *str) {
 }
 
 int main(void) {
-  const char *my_str = "Hello world!";
+  const char *str = "Hello world!";
 
-  printf("%s\n", my_str);
-  printf("%s\n", str_pad(my_str, 15, "0", PAD_LEFT));
-  printf("%s\n", str_pad(my_str, 15, "0", PAD_RIGHT));
-  printf("%s\n", str_pad(my_str, 15, "", PAD_RIGHT));
-  printf("%s\n", str_pad(my_str, 1, "0", PAD_RIGHT));
-  printf("%s\n", str_pad(my_str, 15, "01", PAD_LEFT));
-  printf("%s\n", str_pad(my_str, 16, "0", PAD_BOTH));
-  printf("%s\n", str_pad(my_str, 15, "0", PAD_BOTH));
-  printf("%s\n", str_pad(my_str, 15, "01", PAD_BOTH));
-  printf("%s\n", str_pad(my_str, 16, "01", PAD_BOTH));
+  printf("%s\n", str);
+  printf("%s\n", str_replace(str, "!", ".", 0));
+  printf("%s\n", str_replace(str, "!", "", 0));
+  printf("%s\n", str_replace(str, "", ".", 0));
+  printf("%s\n", str_replace(str, "l", "L", 0));
+  printf("%s\n", str_replace(str, "l", "L", 2));
 
   return 0;
 }
