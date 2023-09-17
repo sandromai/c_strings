@@ -636,15 +636,17 @@ char **str_split(const char *str, const char *separator) {
 
   for (unsigned int i = 0, char_count = 0; *(str + i) != '\0'; ++i) {
     if (*(str + i) == *separator) {
-      *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
+      if (char_count > 0) {
+        *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
 
-      if (*(result + count) == NULL) {
-        return NULL;
+        if (*(result + count) == NULL) {
+          return NULL;
+        }
+
+        *(*(result + count) + char_count) = '\0';
+
+        char_count = 0;
       }
-
-      *(*(result + count) + char_count) = '\0';
-
-      char_count = 0;
 
       result = realloc(result, (++count + 1) * sizeof *result);
 
@@ -660,10 +662,12 @@ char **str_split(const char *str, const char *separator) {
 
       **(result + count) = '\0';
     } else {
-      *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
+      if (char_count > 0) {
+        *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
 
-      if (*(result + count) == NULL) {
-        return NULL;
+        if (*(result + count) == NULL) {
+          return NULL;
+        }
       }
 
       *(*(result + count) + char_count++) = *(str + i);
@@ -705,15 +709,17 @@ char **str_split_n(
 
   for (unsigned int i = 0; *(str + i) != '\0'; ++i) {
     if (((n == 0) || (count + 1 < n)) && (*(str + i) == *separator)) {
-      *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
+      if (char_count > 0) {
+        *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
 
-      if (*(result + count) == NULL) {
-        return NULL;
+        if (*(result + count) == NULL) {
+          return NULL;
+        }
+
+        *(*(result + count) + char_count) = '\0';
+
+        char_count = 0;
       }
-
-      *(*(result + count) + char_count) = '\0';
-
-      char_count = 0;
 
       result = realloc(result, (++count + 1) * sizeof *result);
 
@@ -729,10 +735,12 @@ char **str_split_n(
 
       **(result + count) = '\0';
     } else {
-      *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
+      if (char_count > 0) {
+        *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
 
-      if (*(result + count) == NULL) {
-        return NULL;
+        if (*(result + count) == NULL) {
+          return NULL;
+        }
       }
 
       *(*(result + count) + char_count++) = *(str + i);
@@ -760,7 +768,53 @@ char **str_split_n(
   return result;
 }
 
-char *str_join(const char **array, const char *separator) {}
+char *str_join(char **array, const char *separator) {
+  char *result = malloc(sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  unsigned int chars = 0;
+
+  for (unsigned int i = 0; *(array + i) != NULL; ++i) {
+    if (i > 0) {
+      for (unsigned int j = 0; *(separator + j) != '\0'; ++j, ++chars) {
+        if (chars > 0) {
+          result = realloc(result, (chars + 1) * sizeof *result);
+
+          if (result == NULL) {
+            return NULL;
+          }
+        }
+
+        *(result + chars) = *(separator + j);
+      }
+    }
+
+    for (unsigned int j = 0; *(*(array + i) + j) != '\0'; ++j, ++chars) {
+      if (chars > 0) {
+        result = realloc(result, (chars + 1) * sizeof *result);
+
+        if (result == NULL) {
+          return NULL;
+        }
+      }
+
+      *(result + chars) = *(*(array + i) + j);
+    }
+  }
+
+  result = realloc(result, (chars + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  *(result + chars) = '\0';
+
+  return result;
+}
 
 int str_to_int(const char *str) {
   bool negative = false;
@@ -838,7 +892,8 @@ float str_to_float(const char *str) {
 
 int main(void) {
   const char *str = "Hello world! Another line.";
-  char **result = str_split_n(str, " ", 2);
+  char **result = str_split(str, " ");
+  char *result2 = str_join(result, "_");
 
   printf("%s\n", str);
 
@@ -848,6 +903,10 @@ int main(void) {
   }
 
   free(result);
+
+  printf("%s\n", result2);
+
+  free(result2);
 
   return 0;
 }
