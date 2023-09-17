@@ -564,7 +564,7 @@ char *str_replace(
   unsigned int copy_index = 0;
 
   for (unsigned int i = 0; *(str + i) != '\0'; ++i) {
-    if ((*(str + i) == *search) && ((count == 0) || (replaces < count))) {
+    if (((count == 0) || (replaces < count)) && (*(str + i) == *search)) {
       bool found = true;
       unsigned int k = 1;
 
@@ -636,8 +636,16 @@ char **str_split(const char *str, const char *separator) {
 
   for (unsigned int i = 0, char_count = 0; *(str + i) != '\0'; ++i) {
     if (*(str + i) == *separator) {
+      *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
+
+      if (*(result + count) == NULL) {
+        return NULL;
+      }
+
       *(*(result + count) + char_count) = '\0';
+
       char_count = 0;
+
       result = realloc(result, (++count + 1) * sizeof *result);
 
       if (result == NULL) {
@@ -677,7 +685,80 @@ char **str_split_n(
   const char *str,
   const char *separator,
   unsigned int n
-) {}
+) {
+  char **result = malloc(sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  *result = malloc(sizeof **result);
+
+  if (*result == NULL) {
+    return NULL;
+  }
+
+  **result = '\0';
+
+  unsigned int count = 0;
+  unsigned int char_count = 0;
+
+  for (unsigned int i = 0; *(str + i) != '\0'; ++i) {
+    if (((n == 0) || (count + 1 < n)) && (*(str + i) == *separator)) {
+      *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
+
+      if (*(result + count) == NULL) {
+        return NULL;
+      }
+
+      *(*(result + count) + char_count) = '\0';
+
+      char_count = 0;
+
+      result = realloc(result, (++count + 1) * sizeof *result);
+
+      if (result == NULL) {
+        return NULL;
+      }
+
+      *(result + count) = malloc(sizeof **result);
+
+      if (*(result + count) == NULL) {
+        return NULL;
+      }
+
+      **(result + count) = '\0';
+    } else {
+      *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
+
+      if (*(result + count) == NULL) {
+        return NULL;
+      }
+
+      *(*(result + count) + char_count++) = *(str + i);
+    }
+  }
+
+  if ((n != 0) && (count + 1 == n)) {
+    *(result + count) = realloc(*(result + count), (char_count + 1) * sizeof **result);
+
+    if (*(result + count) == NULL) {
+      return NULL;
+    }
+
+    *(*(result + count) + char_count) = '\0';
+  }
+
+  result = realloc(result, (++count + 1) * sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  *(result + count) = NULL;
+
+  return result;
+}
 
 char *str_join(const char **array, const char *separator) {}
 
@@ -757,7 +838,7 @@ float str_to_float(const char *str) {
 
 int main(void) {
   const char *str = "Hello world! Another line.";
-  char **result = str_split(str, " ");
+  char **result = str_split_n(str, " ", 2);
 
   printf("%s\n", str);
 
