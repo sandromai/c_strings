@@ -114,4 +114,6 @@ int str_to_int(const char *str);
 
 float str_to_float(const char *str);
 
+char *int_to_str(int number);
+
 #endif /* strings.h  */

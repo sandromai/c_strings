@@ -888,3 +888,57 @@ float str_to_float(const char *str) {
 
   return result;
 }
+
+char *int_to_str(int number) {
+  char numbers[] = "0123456789";
+  unsigned int j = 0;
+  bool negative = false;
+  char *result = malloc(sizeof *result);
+
+  if (result == NULL) {
+    return NULL;
+  }
+
+  if (number < 0) {
+    negative = true;
+    number = -number;
+  }
+
+  do {
+    *(result + j++) = numbers[number % 10];
+
+    result = realloc(result, j * sizeof *result);
+
+    if (result == NULL) {
+      return NULL;
+    }
+
+    number /= 10;
+  } while (number);
+
+  *(result + j) = '\0';
+
+  char *reversed = str_reverse(result);
+
+  free(result);
+  result = NULL;
+
+  if (reversed == NULL) {
+    return NULL;
+  }
+
+  if (negative) {
+    result = str_concat("-", reversed);
+
+    free(reversed);
+    reversed = NULL;
+
+    if (result == NULL) {
+      return NULL;
+    }
+
+    return result;
+  }
+
+  return reversed;
+}
