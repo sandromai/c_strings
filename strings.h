@@ -4,17 +4,7 @@
 
 #include <stdlib.h>
 
-#ifndef bool
-#define bool unsigned int
-#endif
-
-#ifndef true
-#define true 1
-#endif
-
-#ifndef false
-#define false 0
-#endif
+#include "libs/c_bool/bool.h"
 
 #ifndef TRIM_CHARS
 #define TRIM_CHARS " \n\r\t\v"

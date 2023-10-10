@@ -1,8 +1,6 @@
 #include <stdlib.h>
 
-#define bool unsigned int
-#define true 1
-#define false 0
+#include "libs/c_bool/bool.h"
 
 #define TRIM_CHARS " \n\r\t\v"
 #define TRIM_LEFT -1
