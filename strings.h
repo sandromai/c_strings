@@ -3,8 +3,7 @@
 #define _STRINGS_H
 
 #include <stdlib.h>
-
-#include "libs/c_bool/bool.h"
+#include <stdbool.h>
 
 #ifndef TRIM_CHARS
 #define TRIM_CHARS " \n\r\t\v"

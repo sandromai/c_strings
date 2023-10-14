@@ -1,6 +1,5 @@
 #include <stdlib.h>
-
-#include "libs/c_bool/bool.h"
+#include <stdbool.h>
 
 #define TRIM_CHARS " \n\r\t\v"
 #define TRIM_LEFT -1
@@ -288,7 +287,7 @@ char *str_part(
 char *str_trim(
   const char *str,
   const char *chars,
-  int side
+  const int side
 ) {
   unsigned int length = str_length(str);
   char *result = malloc((length + 1) * sizeof *result);
@@ -437,7 +436,7 @@ char *str_pad(
   const char *str,
   unsigned int length,
   const char *pad_str,
-  int side
+  const int side
 ) {
   if (!*pad_str) {
     return str_copy(str);
